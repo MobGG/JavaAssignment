@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.logging.Level;
@@ -19,7 +20,6 @@ import org.json.simple.JSONObject;
 public class JavaAssignment {
 
     public static void main(String[] args) {
-//        System.out.printf("test\n");
         calculateBill();
     }
 
@@ -34,34 +34,49 @@ public class JavaAssignment {
             while ((line = bufferedReader.readLine()) != null) {
                 phoneBill += line + "\n";
             }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(JavaAssignment.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(JavaAssignment.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
             if (bufferedReader != null) {
                 try {
                     bufferedReader.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
+                } catch (IOException ex) {
+                    Logger.getLogger(JavaAssignment.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
             if (fileReader != null) {
                 try {
                     fileReader.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
+                } catch (IOException ex) {
+                    Logger.getLogger(JavaAssignment.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
         }
         return phoneBill;
     }
 
+    public static String combineDateAndTime(String date, String time) {
+        String dateTime = "";
+        dateTime = date + " " + time;
+        return dateTime;
+    }
+
+    public static Date convertStringToDate(String strDateTime) {
+        Date dateTime = new Date();
+        final SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+        try {
+            dateTime = format.parse(strDateTime);
+        } catch (ParseException ex) {
+            Logger.getLogger(JavaAssignment.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return dateTime;
+    }
+
     public static void calculateBill() {
         String[] phoneBalance = readFile("promotion1.log").split("\n");
-//        if (phoneBalance != null) {
-//            System.out.printf("data not null");
-//        }
+
         int count = phoneBalance.length;
         String[][] billData = new String[count][];
         long diff, diffSeconds, diffMinutes, diffHours;
@@ -70,40 +85,32 @@ public class JavaAssignment {
 
         for (int i = 0; i < count; i++) {
             billData[i] = phoneBalance[i].split("\\|");
-            String callStart = billData[i][0] + " " + billData[i][1];
-            String callEnd = billData[i][0] + " " + billData[i][2];
+            String callStart = combineDateAndTime(billData[i][0], billData[i][1]);
+            String callEnd = combineDateAndTime(billData[i][0], billData[i][2]);
             Date start, end;
             double payment = 0;
-            try {
-                SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
-                start = format.parse(callStart);
-                end = format.parse(callEnd);
 
-                diff = end.getTime() - start.getTime();
-                diffSeconds = diff / 1000 % 60;
-                diffMinutes = diff / (60 * 1000) % 60;
-                diffHours = diff / (60 * 60 * 1000) % 24;
-                switch (billData[i][4]) {
-                    case "P1":
-                        if (diffHours == 0 && diffMinutes == 0) {
-                            payment = 3;
-                        } else {
-                            payment = (3 + (diffHours * 60) + (diffMinutes - 1) + (diffSeconds * (1 / 60)));
-                        }
-                        break;
-                    default:
-                        break;
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
+            start = convertStringToDate(callStart);
+            end = convertStringToDate(callEnd);
+
+            diff = end.getTime() - start.getTime();
+            diffSeconds = diff / 1000 % 60;
+            diffMinutes = diff / (60 * 1000) % 60;
+            diffHours = diff / (60 * 60 * 1000) % 24;
+            switch (billData[i][4]) {
+                case "P1":
+                    if (diffHours == 0 && diffMinutes == 0) {
+                        payment = 3;
+                    } else {
+                        payment = (3 + (diffHours * 60) + (diffMinutes - 1) + (diffSeconds * (1 / 60)));
+                    }
+                    break;
+                default:
+                    break;
             }
 
             JSONObject bill = new JSONObject();
-//            bill.put("date", billData[i][0]);
-//            bill.put("startTime", billData[i][1]);
-//            bill.put("endTime", billData[i][2]);
             bill.put("mobileNo", billData[i][3]);
-//            bill.put("promotion", billData[i][4]);
             bill.put("payment", payment);
 
             billList.add(bill);
@@ -115,8 +122,6 @@ public class JavaAssignment {
     public static void exportJson(JSONObject phoneBill) {
         try (FileWriter file = new FileWriter("phoneBill.json")) {
             file.write(phoneBill.toJSONString());
-//            System.out.println("Successfully Copied JSON Object to File...");
-//            System.out.println("\nJSON Object: " + phoneBill);
         } catch (IOException ex) {
             Logger.getLogger(JavaAssignment.class.getName()).log(Level.SEVERE, null, ex);
         }
