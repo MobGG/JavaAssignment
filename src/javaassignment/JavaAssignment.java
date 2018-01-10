@@ -66,7 +66,7 @@ public class JavaAssignment {
         String[][] billData = new String[count][];
         long diff, diffSeconds, diffMinutes, diffHours;
         JSONArray billList = new JSONArray();
-        JSONObject bill = new JSONObject();
+        JSONObject phoneBill = new JSONObject();
 
         for (int i = 0; i < count; i++) {
             billData[i] = phoneBalance[i].split("\\|");
@@ -85,7 +85,11 @@ public class JavaAssignment {
                 diffHours = diff / (60 * 60 * 1000) % 24;
                 switch (billData[i][4]) {
                     case "P1":
-                        payment = (3 + (diffHours * 60) + (diffMinutes - 1) + (diffSeconds * (1 / 60)));
+                        if (diffHours == 0 && diffMinutes == 0) {
+                            payment = 3;
+                        } else {
+                            payment = (3 + (diffHours * 60) + (diffMinutes - 1) + (diffSeconds * (1 / 60)));
+                        }
                         break;
                     default:
                         break;
@@ -94,6 +98,7 @@ public class JavaAssignment {
                 e.printStackTrace();
             }
 
+            JSONObject bill = new JSONObject();
 //            bill.put("date", billData[i][0]);
 //            bill.put("startTime", billData[i][1]);
 //            bill.put("endTime", billData[i][2]);
@@ -102,23 +107,16 @@ public class JavaAssignment {
             bill.put("payment", payment);
 
             billList.add(bill);
-
-            try (FileWriter file = new FileWriter("phoneBill.json")) {
-                file.write(billList.toJSONString());
-                System.out.println("Successfully Copied JSON Object to File...");
-                System.out.println("\nJSON Object: " + billList);
-            } catch (IOException ex) {
-                Logger.getLogger(JavaAssignment.class.getName()).log(Level.SEVERE, null, ex);
-            }
-//            System.out.printf(" วันที่ " + billData[i][0] + " เริ่มโทรเวลา " + billData[i][1] + " ถึง " + billData[i][2] + " หมายเลข " + billData[i][3] + " โปรโมชั่น " + billData[i][4] + " ค่าบริการ %.2f\n", payment);
         }
+        phoneBill.put("phoneBill", billList);
+        exportJson(phoneBill);
     }
 
-    public static void exportJson(JSONArray billList) {
+    public static void exportJson(JSONObject phoneBill) {
         try (FileWriter file = new FileWriter("phoneBill.json")) {
-            file.write(billList.toJSONString());
-            System.out.println("Successfully Copied JSON Object to File...");
-            System.out.println("\nJSON Object: " + billList);
+            file.write(phoneBill.toJSONString());
+//            System.out.println("Successfully Copied JSON Object to File...");
+//            System.out.println("\nJSON Object: " + phoneBill);
         } catch (IOException ex) {
             Logger.getLogger(JavaAssignment.class.getName()).log(Level.SEVERE, null, ex);
         }
